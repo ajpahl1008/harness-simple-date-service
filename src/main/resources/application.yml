@@ -1,0 +1,15 @@
+spring:
+  application:
+    name: simple-date-service
+
+server:
+  port: 8080
+
+springdoc:
+  api-docs:
+    # OpenAPI specification (JSON) served here
+    path: /api/v1/openapi
+  swagger-ui:
+    # Swagger UI served here
+    path: /api/v1/swagger-ui
+    operations-sorter: alpha
