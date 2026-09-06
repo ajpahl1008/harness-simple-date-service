@@ -7,9 +7,18 @@ import io.swagger.v3.oas.models.info.License;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+/**
+ * Configuration for OpenAPI/Swagger documentation.
+ * Defines metadata and settings for the API specification.
+ */
 @Configuration
 public class OpenApiConfig {
 
+    /**
+     * Configures the OpenAPI specification for the Simple Date Service API.
+     *
+     * @return OpenAPI instance with API metadata including title, description, version, and license
+     */
     @Bean
     public OpenAPI simpleDateServiceOpenApi() {
         return new OpenAPI().info(new Info()

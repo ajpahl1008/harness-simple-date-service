@@ -16,6 +16,10 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * REST controller that provides the current date endpoint.
+ * Returns the current date in ISO-8601 format based on the injected clock.
+ */
 @RestController
 @RequestMapping("/api/v1")
 @Tag(name = "Date", description = "Current date")
@@ -23,10 +27,20 @@ public class DateController {
 
     private final Clock clock;
 
+    /**
+     * Constructs a DateController with the specified clock.
+     *
+     * @param clock the clock to use for determining the current date
+     */
     public DateController(Clock clock) {
         this.clock = clock;
     }
 
+    /**
+     * Returns the current date in ISO-8601 format.
+     *
+     * @return DateResponse containing the current date in UTC
+     */
     @Operation(summary = "Get the current date",
             description = "Returns the current date (UTC) as an ISO-8601 calendar date.")
     @ApiResponse(responseCode = "200", description = "The current date",

@@ -22,11 +22,19 @@ class OpenApiDocumentationTest {
 
     private MockMvc mockMvc;
 
+    /**
+     * Sets up MockMvc with the web application context.
+     *
+     * @param context the web application context to configure MockMvc with
+     */
     @Autowired
     void setUp(WebApplicationContext context) {
         this.mockMvc = MockMvcBuilders.webAppContextSetup(context).build();
     }
 
+    /**
+     * Verifies that the OpenAPI specification is served at /api/v1/openapi and documents the date endpoint.
+     */
     @Test
     @DisplayName("OpenAPI spec is served at /api/v1/openapi and documents the date endpoint")
     void servesOpenApiSpec() throws Exception {
@@ -38,6 +46,9 @@ class OpenApiDocumentationTest {
                 .andExpect(jsonPath("$.components.schemas.DateResponse.properties.date.format").value("date"));
     }
 
+    /**
+     * Verifies that the Swagger UI is accessible and redirects correctly.
+     */
     @Test
     @DisplayName("Swagger UI is reachable at /api/v1/swagger-ui")
     void servesSwaggerUi() throws Exception {

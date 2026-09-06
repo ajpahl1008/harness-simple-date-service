@@ -12,6 +12,11 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class ClockConfig {
 
+    /**
+     * Provides a system UTC clock bean for dependency injection.
+     *
+     * @return a Clock instance using the system time in UTC
+     */
     @Bean
     public Clock clock() {
         return Clock.systemUTC();

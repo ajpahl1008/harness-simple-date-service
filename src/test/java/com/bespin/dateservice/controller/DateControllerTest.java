@@ -29,8 +29,16 @@ class DateControllerTest {
 
     private static final Instant FIXED_INSTANT = Instant.parse("2026-09-06T12:34:56Z");
 
+    /**
+     * Test configuration that provides a fixed clock for deterministic testing.
+     */
     @TestConfiguration
     static class FixedClockConfig {
+        /**
+         * Provides a fixed clock bean set to a specific instant.
+         *
+         * @return a Clock fixed at the test instant in UTC
+         */
         @Bean
         Clock clock() {
             return Clock.fixed(FIXED_INSTANT, ZoneOffset.UTC);
@@ -40,6 +48,9 @@ class DateControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
+    /**
+     * Verifies that the date endpoint returns HTTP 200 with JSON content type.
+     */
     @Test
     @DisplayName("GET /api/v1/date returns 200 with JSON content type")
     void returnsJson() throws Exception {
@@ -48,6 +59,9 @@ class DateControllerTest {
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON));
     }
 
+    /**
+     * Verifies that the date endpoint returns the date in ISO-8601 format.
+     */
     @Test
     @DisplayName("GET /api/v1/date returns the clock's date in ISO-8601 format")
     void returnsCurrentDateInIsoFormat() throws Exception {
@@ -57,6 +71,9 @@ class DateControllerTest {
                 .andExpect(jsonPath("$.date").value(org.hamcrest.Matchers.matchesPattern("\\d{4}-\\d{2}-\\d{2}")));
     }
 
+    /**
+     * Verifies that the response body contains exactly the expected date field and no other fields.
+     */
     @Test
     @DisplayName("Response body contains only the date key")
     void responseContainsOnlyDateKey() throws Exception {
