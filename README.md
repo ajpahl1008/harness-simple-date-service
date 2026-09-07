@@ -100,6 +100,51 @@ curl http://localhost:8080/actuator/health
 curl http://localhost:8080/actuator/info
 ```
 
+## Docker
+
+The image follows the same shape as the other Bespin services: Amazon Corretto on Alpine,
+running as a non-root `sdg` user, with the boot jar copied to `/app/app.jar`.
+
+Build the jar first, then the image:
+
+```bash
+./gradlew build
+./createLocalDockerImage.zsh 0.0.1-SNAPSHOT
+```
+
+| Script | Purpose |
+|--------|---------|
+| `createLocalDockerImage.zsh <version>` | `linux/arm64` build loaded into the local Docker daemon |
+| `createDockerHubImage.zsh <version>`   | Multi-arch (`arm64` + `amd64`) build pushed to Docker Hub with provenance and SBOM |
+| `runDockerImage.zsh <version>`         | Removes any previous container, then runs the image on port 8080 |
+
+All three take the image version as their only argument and publish to
+`bespinengineering/simple-date-service`.
+
+```bash
+./runDockerImage.zsh 0.0.1-SNAPSHOT
+```
+
+`runDockerImage.zsh` sources a `.env` and passes it through with `--env-file` when one is present.
+This service needs no configuration to start, so `.env` is optional.
+
+### Container health
+
+The image declares a `HEALTHCHECK` against `/actuator/health`, so `docker ps` and any orchestrator
+reading container health see the service's own health check rather than just "the process is
+running":
+
+```bash
+docker inspect --format '{{.State.Health.Status}}' simple-date-service
+# healthy
+```
+
+`curl` is installed in the image for that check; it is the only package added on top of the base.
+
+`build.gradle` disables the plain jar (`tasks.named('jar') { enabled = false }`) so that only the
+executable boot jar lands in `build/libs`, which keeps the Dockerfile's
+`simple-date-service-*.jar` glob unambiguous.
+
 ## Tests and coverage
 
 ```bash

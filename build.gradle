@@ -30,6 +30,12 @@ dependencies {
 }
 
 
+// Only the executable boot jar is published; the plain jar would otherwise make the
+// Dockerfile's build/libs/simple-date-service-*.jar glob ambiguous.
+tasks.named('jar') {
+    enabled = false
+}
+
 // The application bootstrap class only calls SpringApplication.run; excluded from coverage.
 def coverageExclusions = ['com/bespin/dateservice/SimpleDateServiceApplication.class']
 
