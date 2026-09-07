@@ -20,6 +20,7 @@ repositories {
 
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:3.1.1'
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
@@ -28,6 +29,12 @@ dependencies {
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
+
+// Only the executable boot jar is published; the plain jar would otherwise make the
+// Dockerfile's build/libs/simple-date-service-*.jar glob ambiguous.
+tasks.named('jar') {
+    enabled = false
+}
 
 // The application bootstrap class only calls SpringApplication.run; excluded from coverage.
 def coverageExclusions = ['com/bespin/dateservice/SimpleDateServiceApplication.class']

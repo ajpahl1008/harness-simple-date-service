@@ -7,6 +7,9 @@ import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 
 import com.bespin.dateservice.dto.DateResponse;
+import com.bespin.dateservice.metrics.DateRequestCounter;
+
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -23,7 +26,16 @@ class DateControllerUnitTest {
 
     private DateResponse currentDateAt(String instant) {
         Clock clock = Clock.fixed(Instant.parse(instant), ZoneOffset.UTC);
-        return new DateController(clock).currentDate();
+        return new DateController(clock, newCounter()).currentDate();
+    }
+
+    /**
+     * Creates a request counter backed by a throwaway in-memory meter registry.
+     *
+     * @return a fresh DateRequestCounter starting at zero
+     */
+    private DateRequestCounter newCounter() {
+        return new DateRequestCounter(new SimpleMeterRegistry());
     }
 
     @Test
@@ -92,5 +104,23 @@ class DateControllerUnitTest {
         LocalDateTime dateTime = currentDateAt("2026-09-06T12:34:56.789Z").date();
         assertThat(LocalDateTime.parse(dateTime.format(RESPONSE_FORMAT), RESPONSE_FORMAT))
                 .isEqualTo(dateTime);
+    }
+
+    /**
+     * Verifies that each served request increments the request counter by exactly one.
+     */
+    @Test
+    @DisplayName("Each call increments the request counter")
+    void incrementsRequestCounterPerCall() {
+        Clock clock = Clock.fixed(Instant.parse("2026-09-06T12:00:00Z"), ZoneOffset.UTC);
+        DateRequestCounter counter = newCounter();
+        DateController controller = new DateController(clock, counter);
+
+        assertThat(counter.count()).isZero();
+        controller.currentDate();
+        assertThat(counter.count()).isEqualTo(1L);
+        controller.currentDate();
+        controller.currentDate();
+        assertThat(counter.count()).isEqualTo(3L);
     }
 }

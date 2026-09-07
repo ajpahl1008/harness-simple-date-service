@@ -1,0 +1,15 @@
+# Only build/libs/*.jar is needed in the build context; keep the rest out so the
+# context stays small.
+.git
+.gradle
+.idea
+build/classes
+build/reports
+build/resources
+build/tmp
+build/generated
+src
+gradle
+gradlew
+gradlew.bat
+*.md

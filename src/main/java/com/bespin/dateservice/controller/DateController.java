@@ -4,6 +4,7 @@ import java.time.Clock;
 import java.time.LocalDateTime;
 
 import com.bespin.dateservice.dto.DateResponse;
+import com.bespin.dateservice.metrics.DateRequestCounter;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -18,7 +19,11 @@ import org.springframework.web.bind.annotation.RestController;
 
 /**
  * REST controller that provides the current date endpoint.
- * Returns the current date and time in ISO-8601 format based on the injected clock.
+ * Returns the current date in ISO-8601 format based on the injected clock.
+ *
+ * <p>Every successful call is recorded on {@link DateRequestCounter}, which surfaces the running
+ * total through the actuator (see {@code /actuator/info} and
+ * {@code /actuator/metrics/date.service.requests}).
  */
 @RestController
 @RequestMapping("/api/v1")
@@ -26,18 +31,21 @@ import org.springframework.web.bind.annotation.RestController;
 public class DateController {
 
     private final Clock clock;
+    private final DateRequestCounter requestCounter;
 
     /**
-     * Constructs a DateController with the specified clock.
+     * Constructs a DateController with the specified clock and request counter.
      *
      * @param clock the clock to use for determining the current date
+     * @param requestCounter the counter incremented on each served request
      */
-    public DateController(Clock clock) {
+    public DateController(Clock clock, DateRequestCounter requestCounter) {
         this.clock = clock;
+        this.requestCounter = requestCounter;
     }
 
     /**
-     * Returns the current date and time in ISO-8601 format.
+     * Returns the current date in ISO-8601 format and records the call against the request counter.
      *
      * @return DateResponse containing the current date and time in UTC
      */
@@ -48,6 +56,7 @@ public class DateController {
                     schema = @Schema(implementation = DateResponse.class)))
     @GetMapping(value = "/date", produces = MediaType.APPLICATION_JSON_VALUE)
     public DateResponse currentDate() {
-        return new DateResponse(LocalDateTime.now(clock));
+        requestCounter.increment();
+        return new DateResponse(LocalDate.now(clock));
     }
 }
