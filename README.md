@@ -41,6 +41,8 @@ unexposed.
 curl http://localhost:8080/actuator/health
 ```
 
+Abbreviated example; disk-space values depend on the host filesystem:
+
 ```json
 {"status":"UP","components":{"diskSpace":{"status":"UP"},"ping":{"status":"UP"}}}
 ```
@@ -166,8 +168,8 @@ Test layers:
 - `DateControllerTest` — `@WebMvcTest` slice covering status, content type, and exact JSON body.
 - `OpenApiDocumentationTest` — asserts the OpenAPI spec is served on its configured
   endpoint and documents `/api/v1/date`.
-- `ActuatorEndpointsTest` — asserts `/actuator/health` reports `UP` and that the call counter is
-  exposed, and moves, on both `/actuator/info` and `/actuator/metrics`.
+- `ActuatorEndpointsTest` — asserts `/actuator/health` reports `UP` and that the call counter
+  appears on both `/actuator/info` and `/actuator/metrics`.
 - `SimpleDateServiceApplicationTests` — context load.
 
 ## Notes on the date source
