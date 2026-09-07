@@ -128,7 +128,7 @@ All three take the image version as their only argument and publish to
 ./runDockerImage.zsh 0.0.1-SNAPSHOT
 ```
 
-`runDockerImage.zsh` sources a `.env` and passes it through with `--env-file` when one is present.
+`runDockerImage.zsh` passes a `.env` through with Docker's `--env-file` when one is present.
 This service needs no configuration to start, so `.env` is optional.
 
 ### Container health

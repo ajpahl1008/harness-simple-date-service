@@ -9,9 +9,6 @@ fi
 # The service needs no configuration to run, so .env is optional here
 env_args=()
 if [ -f .env ]; then
-  set -a
-  source .env
-  set +a
   env_args=(--env-file .env)
 fi
 
