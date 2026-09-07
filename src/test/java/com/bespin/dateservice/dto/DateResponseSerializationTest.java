@@ -51,6 +51,13 @@ class DateResponseSerializationTest {
     }
 
     @Test
+    @DisplayName("Sub-millisecond precision is truncated without rolling into the next second")
+    void truncatesSubMillisecondPrecision() throws Exception {
+        assertThat(serialise(LocalDateTime.of(2026, 12, 31, 23, 59, 59, 999_999_999)))
+                .isEqualTo("{\"date\":\"2026-12-31T23:59:59.999\"}");
+    }
+
+    @Test
     @DisplayName("Single-digit months, days, hours and minutes are zero padded")
     void zeroPadsAllFields() throws Exception {
         assertThat(serialise(LocalDateTime.of(2026, 1, 2, 3, 4, 5, 6_000_000)))
