@@ -13,3 +13,14 @@ springdoc:
     # Swagger UI served here
     path: /api/v1/swagger-ui
     operations-sorter: alpha
+
+management:
+  endpoints:
+    web:
+      exposure:
+        # Health for liveness/readiness checks, info for the call counter,
+        # metrics for the underlying Micrometer meters.
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
