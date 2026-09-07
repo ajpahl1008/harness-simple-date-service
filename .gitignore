@@ -20,5 +20,5 @@ gradle-app.setting
 # JDT-specific (Eclipse Java Development Tools)
 .classpath
 
-# Local environment file optionally sourced by runDockerImage.zsh
+# Local environment file optionally passed to Docker by runDockerImage.zsh
 .env
