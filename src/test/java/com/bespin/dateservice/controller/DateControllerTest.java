@@ -8,8 +8,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.http.MediaType;
 import org.springframework.test.json.JsonCompareMode;
@@ -21,23 +21,20 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * Slice tests for {@link DateController} against a fixed clock, so the expected date is exact
- * rather than "whatever today happens to be".
+ * Slice tests for {@link DateController} against a fixed clock, so the expected date-time is
+ * exact rather than "whatever now happens to be".
  */
 @WebMvcTest(DateController.class)
 class DateControllerTest {
 
-    private static final Instant FIXED_INSTANT = Instant.parse("2026-09-06T12:34:56Z");
+    private static final Instant FIXED_INSTANT = Instant.parse("2026-09-06T12:34:56.789Z");
 
-    /**
-     * Test configuration that provides a fixed clock for deterministic testing.
-     */
     @TestConfiguration
     static class FixedClockConfig {
         /**
-         * Provides a fixed clock bean set to a specific instant.
+         * Replaces the application clock with a fixed one so responses are deterministic.
          *
-         * @return a Clock fixed at the test instant in UTC
+         * @return a Clock fixed at {@code 2026-09-06T12:34:56.789Z}
          */
         @Bean
         Clock clock() {
@@ -48,9 +45,6 @@ class DateControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
-    /**
-     * Verifies that the date endpoint returns HTTP 200 with JSON content type.
-     */
     @Test
     @DisplayName("GET /api/v1/date returns 200 with JSON content type")
     void returnsJson() throws Exception {
@@ -59,27 +53,29 @@ class DateControllerTest {
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON));
     }
 
-    /**
-     * Verifies that the date endpoint returns the date in ISO-8601 format.
-     */
     @Test
-    @DisplayName("GET /api/v1/date returns the clock's date in ISO-8601 format")
-    void returnsCurrentDateInIsoFormat() throws Exception {
+    @DisplayName("GET /api/v1/date serialises the date-time as yyyy-MM-dd'T'HH:mm:ss.SSS")
+    void returnsDateTimeInIsoFormat() throws Exception {
         mockMvc.perform(get("/api/v1/date"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.date").value("2026-09-06"))
-                .andExpect(jsonPath("$.date").value(org.hamcrest.Matchers.matchesPattern("\\d{4}-\\d{2}-\\d{2}")));
+                .andExpect(jsonPath("$.date").value("2026-09-06T12:34:56.789"))
+                .andExpect(jsonPath("$.date").value(org.hamcrest.Matchers.matchesPattern(
+                        "\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}")));
     }
 
-    /**
-     * Verifies that the response body contains exactly the expected date field and no other fields.
-     */
     @Test
     @DisplayName("Response body contains only the date key")
     void responseContainsOnlyDateKey() throws Exception {
         mockMvc.perform(get("/api/v1/date"))
                 .andExpect(status().isOk())
-                .andExpect(content().json("{\"date\":\"2026-09-06\"}", JsonCompareMode.STRICT));
+                .andExpect(content().json("{\"date\":\"2026-09-06T12:34:56.789\"}", JsonCompareMode.STRICT));
     }
 
+    @Test
+    @DisplayName("The date-time is emitted as a JSON string, not an array or object")
+    void serialisesAsString() throws Exception {
+        mockMvc.perform(get("/api/v1/date"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.date").isString());
+    }
 }

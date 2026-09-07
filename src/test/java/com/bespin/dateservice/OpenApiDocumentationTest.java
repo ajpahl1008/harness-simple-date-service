@@ -43,7 +43,9 @@ class OpenApiDocumentationTest {
                 .andExpect(jsonPath("$.openapi").exists())
                 .andExpect(jsonPath("$.info.title").value("Simple Date Service API"))
                 .andExpect(jsonPath("$.paths['/api/v1/date'].get").exists())
-                .andExpect(jsonPath("$.components.schemas.DateResponse.properties.date.format").value("date"));
+                .andExpect(jsonPath("$.components.schemas.DateResponse.properties.date.format").value("date-time"))
+                .andExpect(jsonPath("$.components.schemas.DateResponse.properties.date.example")
+                        .value("2026-09-06T12:34:56.789"));
     }
 
     /**
