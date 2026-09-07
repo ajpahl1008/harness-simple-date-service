@@ -45,6 +45,7 @@ class DateControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
+    /** Verifies that the endpoint returns a successful JSON response. */
     @Test
     @DisplayName("GET /api/v1/date returns 200 with JSON content type")
     void returnsJson() throws Exception {
@@ -53,6 +54,7 @@ class DateControllerTest {
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON));
     }
 
+    /** Verifies the exact fixed-width ISO-8601 date-time representation. */
     @Test
     @DisplayName("GET /api/v1/date serialises the date-time as yyyy-MM-dd'T'HH:mm:ss.SSS")
     void returnsDateTimeInIsoFormat() throws Exception {
@@ -63,6 +65,7 @@ class DateControllerTest {
                         "\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}")));
     }
 
+    /** Verifies that the response contains no fields beyond the documented date field. */
     @Test
     @DisplayName("Response body contains only the date key")
     void responseContainsOnlyDateKey() throws Exception {
@@ -71,6 +74,7 @@ class DateControllerTest {
                 .andExpect(content().json("{\"date\":\"2026-09-06T12:34:56.789\"}", JsonCompareMode.STRICT));
     }
 
+    /** Verifies that Jackson emits the date-time as a JSON string value. */
     @Test
     @DisplayName("The date-time is emitted as a JSON string, not an array or object")
     void serialisesAsString() throws Exception {

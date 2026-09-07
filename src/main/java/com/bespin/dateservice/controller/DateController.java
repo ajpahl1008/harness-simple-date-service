@@ -30,7 +30,7 @@ public class DateController {
     /**
      * Constructs a DateController with the specified clock.
      *
-     * @param clock the clock to use for determining the current date
+     * @param clock the clock to use for determining the current date and time
      */
     public DateController(Clock clock) {
         this.clock = clock;
