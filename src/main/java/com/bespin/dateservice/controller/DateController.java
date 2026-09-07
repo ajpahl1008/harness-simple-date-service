@@ -1,7 +1,7 @@
 package com.bespin.dateservice.controller;
 
 import java.time.Clock;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 import com.bespin.dateservice.dto.DateResponse;
 import com.bespin.dateservice.metrics.DateRequestCounter;
@@ -27,7 +27,7 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @RestController
 @RequestMapping("/api/v1")
-@Tag(name = "Date", description = "Current date")
+@Tag(name = "Date", description = "Current date and time")
 public class DateController {
 
     private final Clock clock;
@@ -47,11 +47,11 @@ public class DateController {
     /**
      * Returns the current date in ISO-8601 format and records the call against the request counter.
      *
-     * @return DateResponse containing the current date in UTC
+     * @return DateResponse containing the current date and time in UTC
      */
-    @Operation(summary = "Get the current date",
-            description = "Returns the current date (UTC) as an ISO-8601 calendar date.")
-    @ApiResponse(responseCode = "200", description = "The current date",
+    @Operation(summary = "Get the current date and time",
+            description = "Returns the current date and time (UTC) as an ISO-8601 date-time with millisecond precision.")
+    @ApiResponse(responseCode = "200", description = "The current date and time",
             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                     schema = @Schema(implementation = DateResponse.class)))
     @GetMapping(value = "/date", produces = MediaType.APPLICATION_JSON_VALUE)

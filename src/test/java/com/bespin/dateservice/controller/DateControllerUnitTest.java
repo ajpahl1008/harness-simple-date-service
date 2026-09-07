@@ -2,7 +2,7 @@ package com.bespin.dateservice.controller;
 
 import java.time.Clock;
 import java.time.Instant;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 
@@ -21,12 +21,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 /** Plain unit tests for the controller's date logic, with no Spring context. */
 class DateControllerUnitTest {
 
-    /**
-     * Helper method to get the current date response for a specific instant.
-     *
-     * @param instant the ISO-8601 instant string to use for the fixed clock
-     * @return DateResponse from the controller at the given instant
-     */
+    private static final DateTimeFormatter RESPONSE_FORMAT =
+            DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS");
+
     private DateResponse currentDateAt(String instant) {
         Clock clock = Clock.fixed(Instant.parse(instant), ZoneOffset.UTC);
         return new DateController(clock, newCounter()).currentDate();
@@ -41,44 +38,72 @@ class DateControllerUnitTest {
         return new DateRequestCounter(new SimpleMeterRegistry());
     }
 
-    /**
-     * Verifies that the controller returns the date from the injected clock.
-     */
     @Test
-    @DisplayName("Returns the clock's UTC date")
-    void returnsClockDate() {
-        assertThat(currentDateAt("2026-09-06T00:00:00Z").date()).isEqualTo(LocalDate.of(2026, 9, 6));
+    @DisplayName("Returns the clock's UTC date and time")
+    void returnsClockDateTime() {
+        assertThat(currentDateAt("2026-09-06T12:34:56.789Z").date())
+                .isEqualTo(LocalDateTime.of(2026, 9, 6, 12, 34, 56, 789_000_000));
     }
 
-    /**
-     * Verifies that dates are formatted as ISO-8601 yyyy-MM-dd strings.
-     */
-    @ParameterizedTest(name = "{0} -> ISO date")
-    @ValueSource(strings = {"2026-01-01T00:00:00Z", "2024-02-29T23:59:59Z", "2026-12-31T23:59:59Z"})
-    @DisplayName("Formats every date as ISO-8601 yyyy-MM-dd")
-    void formatsAsIso8601(String instant) {
-        LocalDate date = currentDateAt(instant).date();
-        assertThat(date.format(DateTimeFormatter.ISO_LOCAL_DATE)).matches("\\d{4}-\\d{2}-\\d{2}");
-        assertThat(LocalDate.parse(date.toString(), DateTimeFormatter.ISO_LOCAL_DATE)).isEqualTo(date);
+    @ParameterizedTest(name = "{0} -> yyyy-MM-dd''T''HH:mm:ss.SSS")
+    @DisplayName("Formats every instant as ISO-8601 with millisecond precision")
+    @ValueSource(strings = {
+            "2026-01-01T00:00:00.000Z",
+            "2024-02-29T23:59:59.999Z",
+            "2026-12-31T23:59:59.500Z",
+            "2026-09-06T12:34:56.789Z"})
+    void formatsWithMillisecondPrecision(String instant) {
+        LocalDateTime dateTime = currentDateAt(instant).date();
+        assertThat(dateTime.format(RESPONSE_FORMAT))
+                .matches("\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}");
     }
 
-    /**
-     * Verifies that leap day dates are handled correctly.
-     */
+    @Test
+    @DisplayName("Whole seconds still render three fractional digits")
+    void padsMillisecondsOnWholeSeconds() {
+        // LocalDateTime.toString() would emit "2026-09-06T12:34:56" here, dropping the
+        // fractional part entirely; the response format must keep the .000.
+        LocalDateTime dateTime = currentDateAt("2026-09-06T12:34:56Z").date();
+        assertThat(dateTime.format(RESPONSE_FORMAT)).isEqualTo("2026-09-06T12:34:56.000");
+    }
+
+    @Test
+    @DisplayName("Trailing zeros in the milliseconds are preserved")
+    void keepsTrailingZeroMilliseconds() {
+        // toString() would shorten .100 to .1
+        LocalDateTime dateTime = currentDateAt("2026-09-06T12:34:56.100Z").date();
+        assertThat(dateTime.format(RESPONSE_FORMAT)).isEqualTo("2026-09-06T12:34:56.100");
+    }
+
+    @Test
+    @DisplayName("Sub-millisecond precision is truncated, not rounded")
+    void truncatesBelowMilliseconds() {
+        LocalDateTime dateTime = currentDateAt("2026-09-06T12:34:56.789999Z").date();
+        assertThat(dateTime.format(RESPONSE_FORMAT)).isEqualTo("2026-09-06T12:34:56.789");
+    }
+
     @Test
     @DisplayName("Leap day is preserved")
     void handlesLeapDay() {
-        assertThat(currentDateAt("2024-02-29T12:00:00Z").date()).hasToString("2024-02-29");
+        assertThat(currentDateAt("2024-02-29T12:00:00.000Z").date().format(RESPONSE_FORMAT))
+                .isEqualTo("2024-02-29T12:00:00.000");
     }
 
-    /**
-     * Verifies that the UTC day boundary is respected when determining the current date.
-     */
     @Test
-    @DisplayName("Just before UTC midnight the date has not yet rolled over")
+    @DisplayName("Midnight and the last millisecond of the day are rendered correctly")
     void respectsUtcDayBoundary() {
-        assertThat(currentDateAt("2026-09-06T23:59:59Z").date()).hasToString("2026-09-06");
-        assertThat(currentDateAt("2026-09-07T00:00:00Z").date()).hasToString("2026-09-07");
+        assertThat(currentDateAt("2026-09-06T23:59:59.999Z").date().format(RESPONSE_FORMAT))
+                .isEqualTo("2026-09-06T23:59:59.999");
+        assertThat(currentDateAt("2026-09-07T00:00:00.000Z").date().format(RESPONSE_FORMAT))
+                .isEqualTo("2026-09-07T00:00:00.000");
+    }
+
+    @Test
+    @DisplayName("The formatted value round-trips back to the same date-time")
+    void roundTripsThroughTheFormat() {
+        LocalDateTime dateTime = currentDateAt("2026-09-06T12:34:56.789Z").date();
+        assertThat(LocalDateTime.parse(dateTime.format(RESPONSE_FORMAT), RESPONSE_FORMAT))
+                .isEqualTo(dateTime);
     }
 
     /**
