@@ -20,6 +20,7 @@ pipeline:
           caching:
             enabled: true
             override: false
+            paths: []
           platform:
             os: Linux
             arch: Amd64
@@ -52,3 +53,5 @@ pipeline:
                           shell: Sh
                           command: "gradle clean build "
                           intelligenceMode: true
+          buildIntelligence:
+            enabled: true
