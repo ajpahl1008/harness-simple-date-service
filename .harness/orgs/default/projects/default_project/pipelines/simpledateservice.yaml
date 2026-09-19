@@ -1,0 +1,54 @@
+pipeline:
+  name: simple-date-service
+  identifier: simpledateservice
+  projectIdentifier: default_project
+  orgIdentifier: default
+  tags: {}
+  properties:
+    ci:
+      codebase:
+        connectorRef: githubajpahl1008
+        build: <+input>
+  stages:
+    - stage:
+        name: Build SDS
+        identifier: Build_SDS
+        description: ""
+        type: CI
+        spec:
+          cloneCodebase: true
+          caching:
+            enabled: true
+            override: false
+          platform:
+            os: Linux
+            arch: Amd64
+          runtime:
+            type: Cloud
+            spec: {}
+          execution:
+            steps:
+              - step:
+                  type: GitClone
+                  name: Clone Repo
+                  identifier: Clone_Repo
+                  spec:
+                    connectorRef: githubajpahl1008
+                    build:
+                      type: branch
+                      spec:
+                        branch: main
+              - stepGroup:
+                  name: Builds
+                  identifier: Builds
+                  steps:
+                    - step:
+                        type: Test
+                        name: Run With Tests
+                        identifier: Run_With_Tests
+                        spec:
+                          connectorRef: DockerHub
+                          image: gradle:8.13-jdk25-jammy
+                          shell: Sh
+                          command: "gradle clean build "
+                          intelligenceMode: true
