@@ -5,6 +5,7 @@ import java.time.Instant;
 import java.time.ZoneOffset;
 
 import com.bespin.dateservice.metrics.DateRequestCounter;
+import com.bespin.dateservice.timezone.TimeZoneSettings;
 
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
@@ -71,6 +72,16 @@ class DateControllerTest {
         @Bean
         DateRequestCounter dateRequestCounter(MeterRegistry meterRegistry) {
             return new DateRequestCounter(meterRegistry);
+        }
+
+        /**
+         * Provides the time zone settings the controller reads its rendering zone from.
+         *
+         * @return a TimeZoneSettings starting at the default UTC zone
+         */
+        @Bean
+        TimeZoneSettings timeZoneSettings() {
+            return new TimeZoneSettings();
         }
     }
 

@@ -2,7 +2,7 @@
 
 A minimal RESTful web service that returns the current date and time as JSON in ISO-8601 format.
 
-Spring Boot 4.1 · Java 25 · Gradle · springdoc-openapi (Swagger) · Spring Boot Actuator
+Spring Boot 4.1 · Java 25 · Gradle · springdoc-openapi (Swagger) · Spring Boot Actuator · Vaadin
 
 ## Endpoints
 
@@ -11,6 +11,7 @@ Spring Boot 4.1 · Java 25 · Gradle · springdoc-openapi (Swagger) · Spring Bo
 | GET    | `/api/v1/date`      | Current date and time as JSON                 |
 | GET    | `/api/v1/openapi`   | OpenAPI 3.1 specification (JSON)              |
 | GET    | `/api/v1/swagger-ui`| Swagger UI (redirects to `.../index.html`)    |
+| GET    | `/admin/timezone`   | Time zone management UI (Vaadin)              |
 | GET    | `/actuator/health`  | Health check                                  |
 | GET    | `/actuator/info`    | Service info, including the call counter      |
 | GET    | `/actuator/metrics` | Micrometer metrics                            |
@@ -24,10 +25,24 @@ Content-Type: application/json
 {"date":"2026-09-07T00:20:19.657"}
 ```
 
-`date` is an ISO-8601 date-time with millisecond precision (`yyyy-MM-dd'T'HH:mm:ss.SSS`) derived
-from the current UTC instant. The format is pinned with an explicit `@JsonFormat` pattern rather
-than left to `LocalDateTime.toString()`, which drops trailing zeros and omits the fractional part
-altogether on a whole second.
+`date` is an ISO-8601 date-time with millisecond precision (`yyyy-MM-dd'T'HH:mm:ss.SSS`) rendered
+in the service's active time zone (UTC by default; see [Time zone management](#time-zone-management)
+below). The format is pinned with an explicit `@JsonFormat` pattern rather than left to
+`LocalDateTime.toString()`, which drops trailing zeros and omits the fractional part altogether on
+a whole second.
+
+## Time zone management
+
+`/admin/timezone` is a small Vaadin UI for changing the time zone `/api/v1/date` renders its
+response in. It shows the time zone your browser reports and lets you either use that directly or
+pick any other IANA zone from a searchable list; clicking **Apply** switches the date endpoint
+over immediately.
+
+The setting is held in memory only, via the `TimeZoneSettings` bean: it starts at **UTC** on every
+boot, is not persisted anywhere, and (with multiple instances) is not shared across replicas. The
+route has no authentication — anyone who can reach the service can change it — which is
+appropriate for this sample but would need a `SecurityFilterChain` in front of `/admin/**` in a
+real deployment.
 
 ## Observability
 
@@ -170,6 +185,11 @@ Test layers:
   endpoint and documents `/api/v1/date`.
 - `ActuatorEndpointsTest` — asserts `/actuator/health` reports `UP` and that the call counter
   appears on both `/actuator/info` and `/actuator/metrics`.
+- `TimeZoneViewTest` — Vaadin [browserless tests](https://vaadin.com/docs/latest/flow/testing/browserless)
+  for the `/admin/timezone` UI: default zone display, the detected-zone shortcut, and the apply
+  flow updating `TimeZoneSettings`. Browserless tests run without a real browser, so there is no
+  way to simulate the browser's response to `Page.getExtendedClientDetails()`; the view exposes a
+  package-private `applyDetectedZoneId(String)` seam that the tests call directly to simulate it.
 - `SimpleDateServiceApplicationTests` — context load.
 
 ## Notes on the date source
@@ -177,3 +197,6 @@ Test layers:
 The controller reads `java.time.Clock`, supplied as a Spring bean (`ClockConfig`), rather than
 calling `LocalDate.now()` directly. Production uses `Clock.systemUTC()`; tests substitute a fixed
 clock, which is what makes the expected timestamps exact rather than "whatever now happens to be".
+`DateController` applies the active `TimeZoneSettings` zone to that clock (`clock.withZone(...)`)
+before rendering, so the response always reflects whatever zone was last set via
+`/admin/timezone`.
