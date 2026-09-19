@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 /**
  * REST controller that provides the current date endpoint.
- * Returns the current date in ISO-8601 format based on the injected clock.
+ * Returns the current date and time in ISO-8601 format based on the injected clock.
  *
  * <p>Every successful call is recorded on {@link DateRequestCounter}, which surfaces the running
  * total through the actuator (see {@code /actuator/info} and
@@ -45,7 +45,8 @@ public class DateController {
     }
 
     /**
-     * Returns the current date in ISO-8601 format and records the call against the request counter.
+     * Returns the current date and time in ISO-8601 format and records the call against the
+     * request counter.
      *
      * @return DateResponse containing the current date and time in UTC
      */
@@ -57,6 +58,6 @@ public class DateController {
     @GetMapping(value = "/date", produces = MediaType.APPLICATION_JSON_VALUE)
     public DateResponse currentDate() {
         requestCounter.increment();
-        return new DateResponse(LocalDate.now(clock));
+        return new DateResponse(LocalDateTime.now(clock));
     }
 }
