@@ -49,7 +49,7 @@ pipeline:
                         identifier: Run_With_Tests
                         spec:
                           connectorRef: DockerHub
-                          image: gradle:8.13-jdk25-jammy
+                          image: gradle:9.2.0-jdk25-corretto-al2023
                           shell: Sh
                           command: "gradle clean build "
                           intelligenceMode: true
