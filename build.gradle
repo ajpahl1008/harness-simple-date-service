@@ -3,6 +3,7 @@ plugins {
     id 'jacoco'
     id 'org.springframework.boot' version '4.1.1'
     id 'io.spring.dependency-management' version '1.1.7'
+    id 'com.vaadin' version "${vaadinVersion}"
 }
 
 group = 'com.bespin'
@@ -18,14 +19,23 @@ repositories {
     mavenCentral()
 }
 
+dependencyManagement {
+    imports {
+        mavenBom "com.vaadin:vaadin-bom:${vaadinVersion}"
+        mavenBom "com.vaadin:browserless-test-bom:${browserlessTestVersion}"
+    }
+}
+
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:3.1.1'
+    implementation 'com.vaadin:vaadin-spring-boot-starter'
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     // Spring Boot 4 ships the @WebMvcTest slice in its own module
     testImplementation 'org.springframework.boot:spring-boot-webmvc-test'
+    testImplementation 'com.vaadin:browserless-test-spring'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 

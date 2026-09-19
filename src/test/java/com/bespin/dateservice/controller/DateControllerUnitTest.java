@@ -3,11 +3,13 @@ package com.bespin.dateservice.controller;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 
 import com.bespin.dateservice.dto.DateResponse;
 import com.bespin.dateservice.metrics.DateRequestCounter;
+import com.bespin.dateservice.timezone.TimeZoneSettings;
 
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 
@@ -26,7 +28,7 @@ class DateControllerUnitTest {
 
     private DateResponse currentDateAt(String instant) {
         Clock clock = Clock.fixed(Instant.parse(instant), ZoneOffset.UTC);
-        return new DateController(clock, newCounter()).currentDate();
+        return new DateController(clock, newCounter(), new TimeZoneSettings()).currentDate();
     }
 
     /**
@@ -114,7 +116,7 @@ class DateControllerUnitTest {
     void incrementsRequestCounterPerCall() {
         Clock clock = Clock.fixed(Instant.parse("2026-09-06T12:00:00Z"), ZoneOffset.UTC);
         DateRequestCounter counter = newCounter();
-        DateController controller = new DateController(clock, counter);
+        DateController controller = new DateController(clock, counter, new TimeZoneSettings());
 
         assertThat(counter.count()).isZero();
         controller.currentDate();
@@ -122,5 +124,19 @@ class DateControllerUnitTest {
         controller.currentDate();
         controller.currentDate();
         assertThat(counter.count()).isEqualTo(3L);
+    }
+
+    @Test
+    @DisplayName("Renders the response in the active time zone, not the clock's zone")
+    void rendersInActiveTimeZone() {
+        Clock utcClock = Clock.fixed(Instant.parse("2026-09-06T12:00:00Z"), ZoneOffset.UTC);
+        TimeZoneSettings settings = new TimeZoneSettings();
+        settings.setZone(ZoneId.of("America/New_York"));
+
+        LocalDateTime dateTime =
+                new DateController(utcClock, newCounter(), settings).currentDate().date();
+
+        // 12:00 UTC on 2026-09-06 is 08:00 in America/New_York (UTC-4 during EDT).
+        assertThat(dateTime).isEqualTo(LocalDateTime.of(2026, 9, 6, 8, 0, 0));
     }
 }
